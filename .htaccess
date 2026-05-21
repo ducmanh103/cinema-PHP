@@ -1,0 +1,148 @@
+# BEGIN WordPress
+# WP cài trong subdir /cinema/ (cả local lẫn VPS).
+# RewriteBase ép Apache rewrite về đúng subdir, không phụ thuộc DOCUMENT_ROOT.
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /cinema/
+RewriteRule ^index\.php$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /cinema/index.php [L]
+</IfModule>
+# END WordPress
+
+# ================================================================
+#  FALLBACK 404 — nếu mod_rewrite tắt hoặc AllowOverride bị cấm,
+#  Apache vẫn route mọi 404 về index.php để WP tự xử lý.
+# ================================================================
+ErrorDocument 404 /cinema/index.php
+
+# ================================================================
+#  FORCE HTTPS — bỏ comment khi VPS đã có SSL (Let's Encrypt)
+# ================================================================
+# <IfModule mod_rewrite.c>
+#     RewriteEngine On
+#     RewriteCond %{HTTPS} off
+#     RewriteCond %{HTTP:X-Forwarded-Proto} !https
+#     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# </IfModule>
+
+# ================================================================
+#  SECURITY HEADERS
+# ================================================================
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=(self)"
+
+    # Strict-Transport-Security — bật khi có SSL ổn định
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+    # Ẩn server info
+    Header always unset X-Powered-By
+    Header unset X-Powered-By
+    Header unset Server
+</IfModule>
+
+# ================================================================
+#  CHẶN FILE NHẠY CẢM
+# ================================================================
+<FilesMatch "^(wp-config\.php|wp-config-sample\.php|\.htaccess|\.htpasswd|\.env|\.gitignore|composer\.(json|lock)|package(-lock)?\.json|.*\.sql|.*\.bak|.*\.tmp|error_log|migrate-urls\.php)$">
+    Require all denied
+</FilesMatch>
+
+# Block readme.html / license.txt (lộ version WP)
+<Files readme.html>
+    Require all denied
+</Files>
+<Files license.txt>
+    Require all denied
+</Files>
+
+# Chặn duyệt thư mục
+Options -Indexes
+
+# Chặn truy cập wp-admin/login từ IP ngoài — bật khi production và biết IP
+# <Files wp-login.php>
+#     Require ip 127.0.0.1
+#     Require ip ::1
+#     # Require ip YOUR_OFFICE_IP
+# </Files>
+
+# Chặn user enumeration (?author=N)
+<IfModule mod_rewrite.c>
+    RewriteCond %{QUERY_STRING} author=\d
+    RewriteRule ^ - [F,L]
+</IfModule>
+
+# Chặn XML-RPC hoàn toàn
+<Files xmlrpc.php>
+    Require all denied
+</Files>
+
+# Chặn execute PHP file trong wp-content/plugins và themes nếu access trực tiếp file lạ
+# (wp-content/plugins/cinema-booking/cinema-booking.php vẫn chạy qua WP bootstrap, an toàn)
+<IfModule mod_rewrite.c>
+    RewriteRule ^wp-content/uploads/.*\.(php|phtml|phar|pl|py|cgi|sh)$ - [F,L]
+</IfModule>
+
+# Chặn các thư mục git/svn (RewriteRule vì <DirectoryMatch> không cho phép trong .htaccess)
+<IfModule mod_rewrite.c>
+    RewriteRule (^|/)\.(git|svn|hg)(/|$) - [F,L]
+</IfModule>
+
+# ================================================================
+#  CACHE HEADERS (assets tĩnh)
+# ================================================================
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresDefault                                "access plus 1 month"
+
+    # Ảnh
+    ExpiresByType image/jpg                       "access plus 1 year"
+    ExpiresByType image/jpeg                      "access plus 1 year"
+    ExpiresByType image/webp                      "access plus 1 year"
+    ExpiresByType image/png                       "access plus 1 year"
+    ExpiresByType image/gif                       "access plus 1 year"
+    ExpiresByType image/svg+xml                   "access plus 1 year"
+    ExpiresByType image/x-icon                    "access plus 1 year"
+
+    # Fonts
+    ExpiresByType font/woff                       "access plus 1 year"
+    ExpiresByType font/woff2                      "access plus 1 year"
+    ExpiresByType application/font-woff           "access plus 1 year"
+    ExpiresByType application/font-woff2          "access plus 1 year"
+    ExpiresByType application/x-font-woff         "access plus 1 year"
+    ExpiresByType application/x-font-woff2        "access plus 1 year"
+
+    # CSS / JS
+    ExpiresByType text/css                        "access plus 1 month"
+    ExpiresByType application/javascript          "access plus 1 month"
+    ExpiresByType text/javascript                 "access plus 1 month"
+
+    # HTML / JSON — không cache lâu
+    ExpiresByType text/html                       "access plus 0 seconds"
+    ExpiresByType application/json                "access plus 0 seconds"
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Immutable cho assets có version trong URL
+    <FilesMatch "\.(jpg|jpeg|png|gif|webp|svg|ico|woff|woff2|ttf|eot)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    <FilesMatch "\.(css|js)$">
+        Header set Cache-Control "public, max-age=2592000"
+    </FilesMatch>
+</IfModule>
+
+# ================================================================
+#  GZIP COMPRESSION
+# ================================================================
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml
+    AddOutputFilterByType DEFLATE application/javascript application/json
+    AddOutputFilterByType DEFLATE image/svg+xml application/xml application/rss+xml
+    AddOutputFilterByType DEFLATE font/ttf font/otf application/wasm
+</IfModule>

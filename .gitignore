@@ -1,0 +1,72 @@
+# ================================================================
+# .gitignore cho WordPress Cinema Project
+# Chỉ version-control: theme + plugin custom, DB schema
+# KHÔNG commit: WordPress core, uploads, sensitive config
+# ================================================================
+
+# ---- WordPress Core (không cần commit) ----
+/wp-admin/
+/wp-includes/
+/wp-*.php
+!/wp-config.php          # Bỏ comment dòng này nếu muốn exclude wp-config
+/index.php
+/xmlrpc.php
+/license.txt
+/readme.html
+
+# ---- wp-config (chứa credentials — KHÔNG commit) ----
+wp-config.php
+wp-config-prod.php
+!wp-config-sample.php
+
+# ---- Migration script (chỉ tồn tại tạm) ----
+migrate-urls.php
+
+# ---- Uploads (media files — dùng backup riêng) ----
+/wp-content/uploads/
+
+# ---- Themes mặc định của WordPress ----
+/wp-content/themes/twenty*/
+
+# ---- Plugins không phải của mình ----
+/wp-content/plugins/
+!/wp-content/plugins/cinema-booking/
+
+# ---- Themes không phải của mình ----
+/wp-content/themes/
+!/wp-content/themes/cinema-theme/
+
+# ---- Cache & logs ----
+/wp-content/cache/
+/wp-content/debug.log
+*.log
+error_log
+
+# ---- Backup files (tạm thời) ----
+*.bak
+*.tmp
+*.old
+*.orig
+
+# ---- Node / Build tools ----
+node_modules/
+npm-debug.log*
+yarn-error.log*
+/wp-content/themes/cinema-theme/assets/dist/
+
+# ---- OS files ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- IDE ----
+.vscode/
+.idea/
+*.suo
+*.user
+
+# ---- Backup & deploy ----
+*.sql.gz
+*.zip
+/backups/
+/deploy_temp/
