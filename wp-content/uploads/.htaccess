@@ -1,0 +1,13 @@
+# Chặn execute mọi script trong thư mục uploads
+# Áp dụng cho cả khi attacker upload .php disguised
+<FilesMatch "\.(php|phtml|phar|php3|php4|php5|php7|pl|py|cgi|sh|asp|aspx|jsp)$">
+    Require all denied
+</FilesMatch>
+
+# Tắt CGI execution
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule \.(php|phtml|phar|php3|php4|php5|php7)$ - [F,L]
+</IfModule>
+
+Options -ExecCGI -Indexes

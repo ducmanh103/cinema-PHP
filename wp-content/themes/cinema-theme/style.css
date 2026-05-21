@@ -1,0 +1,12 @@
+/*
+Theme Name:  Cinema Theme
+Theme URI:   http://localhost/cinema
+Description: Dark mode cinema booking theme for WordPress. Supports movie listings, showtime scheduling, seat selection, and ticket management.
+Version:     1.0.0
+Author:      Cinema Dev Team
+Author URI:  http://localhost/cinema
+Text Domain: cinema-theme
+Tags:        dark-mode, entertainment, booking, custom-menu, featured-images, responsive-layout
+*/
+
+/* Import vào main.css — file này chỉ chứa theme header */
